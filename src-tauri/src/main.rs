@@ -77,8 +77,8 @@ async fn get_processes(state: State<'_, AppState>) -> Result<(Vec<ProcessInfo>, 
         let load_avg = sys.load_average();
         let memory_total = sys.total_memory();
         let memory_used = sys.used_memory();
-        let memory_free = memory_total - memory_used;
-        let memory_cached = sys.used_swap(); // Estimated
+        let memory_cached = sys.free_memory(); // Estimated
+        let memory_free = sys.available_memory();
 
         system_stats = SystemStats {
             cpu_usage,
