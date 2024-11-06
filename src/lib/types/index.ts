@@ -19,6 +19,11 @@ export interface SystemStats {
   memory_cached: number;
   uptime: number;
   load_avg: [number, number, number];
+  network_rx_bytes: number;
+  network_tx_bytes: number;
+  disk_total_bytes: number;
+  disk_used_bytes: number;
+  disk_free_bytes: number;
 }
 
 export interface Column {

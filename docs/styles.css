@@ -131,24 +131,67 @@ section {
 
 /* Hero Section */
 .hero {
+  height: 600px;
+  width: 100%;
   display: flex;
   align-items: center;
-  padding: 4rem 2rem;
-  margin-top: 64px;
-  /* Account for fixed header */
+  overflow: hidden;
 }
 
 .hero-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
-  align-items: center;
+  flex: 0 0 50%;
+  padding: 2rem;
+  z-index: 2;
+  position: relative;
 }
 
-.hero-text {
-  max-width: 540px;
+.hero-content::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  width: calc(100% + 100px);
+  height: calc(100% + 100px);
+  background: linear-gradient(to right,
+      var(--background) 0%,
+      var(--background) 60%,
+      transparent 100%);
+  z-index: -1;
+}
+
+.hero-background {
+  flex: 0 0 90%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-right: -40%;
+  padding-right: 40%;
+}
+
+.hero-background img {
+  max-width: 200%;
+  max-height: 200%;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+}
+
+.hero-background img[src*="screenshot.png"] {
+  display: none;
+}
+
+.hero-background img[src*="screenshot-light.png"] {
+  display: block;
+}
+
+/* Dark mode */
+[data-theme="dark"] .hero-background img[src*="screenshot.png"] {
+  display: block;
+}
+
+[data-theme="dark"] .hero-background img[src*="screenshot-light.png"] {
+  display: none;
 }
 
 .gradient-text {
@@ -192,17 +235,34 @@ section {
 /* Responsive design */
 @media (max-width: 1024px) {
   .hero {
-    padding: 3rem 1.5rem;
+    flex-direction: column;
+    height: auto;
+    min-height: auto;
   }
 
   .hero-content {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    flex: 0 0 100%;
+    width: 100%;
+    padding: 3rem 2rem;
     text-align: center;
   }
 
-  .hero-text {
-    margin: 0 auto;
+  .hero-background {
+    flex: 0 0 100%;
+    margin-right: 0;
+    padding-right: 0;
+  }
+
+  .hero-background img {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+  }
+
+  .hero-content::before {
+    display: none;
+    /* Remove the gradient since content and image are now stacked */
   }
 
   .hero-cta {
@@ -212,15 +272,15 @@ section {
   .tech-stack {
     justify-content: center;
   }
-
-  .gradient-text {
-    font-size: 3rem;
-  }
 }
 
 @media (max-width: 640px) {
   .hero {
-    padding: 1rem;
+    padding: 2rem 1rem;
+  }
+
+  .hero-content {
+    padding: 2rem 1rem;
   }
 
   .gradient-text {
@@ -1032,4 +1092,16 @@ footer {
 
 .learn-more:hover {
   text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero {
+    height: 500px;
+  }
+
+  .hero-content,
+  .hero-background {
+    flex: 0 0 100%;
+  }
 }

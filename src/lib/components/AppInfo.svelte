@@ -6,7 +6,9 @@
   import Fa from "svelte-fa";
 
   let version = "";
+  let latestVersion = "";
   let showInfo = false;
+  let hasUpdate = false;
 
   const ASCII_ART = `
     ███╗   ██╗███████╗ ██████╗ ██╗  ██╗████████╗ ██████╗ ██████╗ 
@@ -24,31 +26,55 @@
     stack: ["Tauri", "Rust", "Svelte", "TypeScript"],
   };
 
+  async function checkLatestVersion() {
+    try {
+      const response = await fetch(
+        "https://api.github.com/repos/abdenasser/neohtop/releases/latest",
+      );
+      const data = await response.json();
+      latestVersion = data.tag_name.replace("v", "");
+      hasUpdate = version && latestVersion && version !== latestVersion;
+    } catch (error) {
+      console.error("Failed to check latest version:", error);
+    }
+  }
+
   onMount(async () => {
     version = await getVersion();
+    await checkLatestVersion();
   });
 </script>
 
 <div class="app-info">
   <ThemeSwitcher />
   <button
-    class="info-button"
+    class:info-button={true}
+    class:has-update={hasUpdate}
     on:click={() => (showInfo = !showInfo)}
     aria-label="Toggle app info"
   >
-    <span class="icon">
+    <span class="icon" class:update-available={hasUpdate}>
       <Fa icon={faInfo} />
     </span>
   </button>
 
   {#if showInfo}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="info-panel" on:mouseleave={() => (showInfo = false)}>
       <div class="info-content">
         <pre class="ascii-art">{ASCII_ART}</pre>
         <div class="details">
           <div class="detail-row">
             <span>NeoHtop v{version}</span>
+            {#if hasUpdate}
+              <a
+                href={`https://github.com/abdenasser/neohtop/releases/latest`}
+                class="update-button"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Update to v{latestVersion}
+              </a>
+            {/if}
           </div>
           <div class="detail-row">
             <span class="label">app</span>
@@ -104,6 +130,10 @@
     align-items: center;
     font-size: 10px;
     color: var(--subtext0);
+  }
+
+  .icon.update-available {
+    color: var(--red);
   }
 
   .info-panel {
@@ -166,5 +196,35 @@
   .detail-row span {
     color: var(--text);
     font-weight: 500;
+  }
+
+  .info-button.has-update {
+    border-color: var(--red);
+  }
+
+  .info-button.has-update:hover {
+    background: color-mix(in srgb, var(--red) 10%, transparent);
+  }
+
+  .info-button.has-update .icon {
+    color: var(--red);
+  }
+
+  .update-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--base);
+    background: var(--red);
+    border-radius: 4px;
+    text-decoration: none;
+    margin-left: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .update-button:hover {
+    background: color-mix(in srgb, var(--red) 90%, white);
+    transform: translateY(-1px);
   }
 </style>
