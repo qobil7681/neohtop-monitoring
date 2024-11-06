@@ -37,6 +37,9 @@ struct SystemStats {
     memory_used: u64,
     memory_free:u64,
     memory_cached: u64,
+    swap_space: u64,
+    swap_used: u64,
+    swap_free: u64,
     uptime: u64,
     load_avg: [f64; 3],
 }
@@ -75,7 +78,7 @@ async fn get_processes(state: State<'_, AppState>) -> Result<(Vec<ProcessInfo>, 
         let memory_total = sys.total_memory();
         let memory_used = sys.used_memory();
         let memory_free = memory_total - memory_used;
-        let memory_cached = memory_total - (memory_used + memory_free); // Estimated
+        let memory_cached = sys.used_swap(); // Estimated
 
         system_stats = SystemStats {
             cpu_usage,
@@ -83,6 +86,9 @@ async fn get_processes(state: State<'_, AppState>) -> Result<(Vec<ProcessInfo>, 
             memory_used,
             memory_free,
             memory_cached,
+            swap_space: sys.total_swap(),
+            swap_used: sys.used_swap(),
+            swap_free: sys.free_swap(),
             uptime: sys.uptime(),
             load_avg: [load_avg.one, load_avg.five, load_avg.fifteen],
         };
