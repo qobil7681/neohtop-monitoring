@@ -1,4 +1,4 @@
-name: Windows Nightly Build
+name: Windows (x86_64) Nightly Build
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: MacOS Nightly Build
+name: MacOS (x86_64/arm) Nightly Build
 
 on:
   workflow_dispatch:      # Allows manual triggering
