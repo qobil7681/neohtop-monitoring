@@ -1,8 +1,6 @@
 name: Windows (x86_64) Nightly Build
 
 on:
-  schedule:
-    - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
   workflow_dispatch:      # Allows manual triggering
 
 env:
