@@ -14,7 +14,7 @@ use sysinfo::{
 use tauri::State;
 use std::sync::Mutex;
 use std::collections::HashMap;
-use std::time::{Instant};
+use std::time::Instant;
 
 struct AppState {
     sys: Mutex<System>,

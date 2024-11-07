@@ -1,0 +1,84 @@
+name: Linux (x86_64) Nightly Build
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build Linux Packages
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libglib2.0-dev \
+            libjavascriptcoregtk-4.0-dev \
+            libsoup-3.0-dev \
+            libwebkit2gtk-4.1-dev
+          
+      - name: Install Dependencies
+        run: |
+          npm install
+          
+      - name: Build Frontend
+        run: npm run build
+        
+      - name: Build AppImage (x86_64)
+        run: |
+          echo "Building AppImage for x86_64..."
+          npm run tauri build -- --target x86_64-unknown-linux-gnu --bundles appimage
+          
+      - name: Build Debian Package (x86_64)
+        run: |
+          echo "Building Debian package for x86_64..."
+          npm run tauri build -- --target x86_64-unknown-linux-gnu --bundles deb
+          
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+          
+      - name: Upload Debian Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-deb
+          path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
+          
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          
+      - name: Create Release
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Linux x86_64 Nightly Build v${{ steps.version.outputs.version }}"
+          tag_name: "linux-x86_64-nightly-${{ steps.version.outputs.version }}"
+          files: |
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}

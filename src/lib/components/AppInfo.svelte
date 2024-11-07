@@ -22,7 +22,7 @@
   const APP_INFO = {
     name: "NeoHtop",
     developer: "Abdenasser",
-    github: "https://github.com/abdenasser",
+    github: "https://github.com/Abdenasser/neohtop",
     stack: ["Tauri", "Rust", "Svelte", "TypeScript"],
   };
 
@@ -32,16 +32,43 @@
         "https://api.github.com/repos/abdenasser/neohtop/releases/latest",
       );
       const data = await response.json();
-      latestVersion = data.tag_name.replace("v", "");
-      hasUpdate = version && latestVersion && version !== latestVersion;
+
+      // Extract version number from tag (e.g., "1.0.6" from "macos-nightly-1.0.6")
+      const versionMatch = data.tag_name.match(/\d+\.\d+\.\d+/);
+      if (!versionMatch) {
+        console.warn(
+          "Unexpected version format in latest release:",
+          data.tag_name,
+        );
+        return;
+      }
+
+      latestVersion = versionMatch[0];
+
+      // Extract version number from current version
+      const currentVersionMatch = version.match(/\d+\.\d+\.\d+/);
+      if (!currentVersionMatch) {
+        console.warn("Unexpected current version format:", version);
+        return;
+      }
+
+      // Compare only the version numbers
+      hasUpdate = currentVersionMatch[0] !== latestVersion;
     } catch (error) {
       console.error("Failed to check latest version:", error);
+      latestVersion = "";
+      hasUpdate = false;
     }
   }
 
   onMount(async () => {
-    version = await getVersion();
-    await checkLatestVersion();
+    try {
+      version = await getVersion();
+      await checkLatestVersion();
+    } catch (error) {
+      console.error("Failed to initialize version info:", error);
+      version = "";
+    }
   });
 </script>
 
@@ -82,9 +109,16 @@
             <span class="value">{APP_INFO.name}</span>
           </div>
           <div class="detail-row">
-            <span class="label">developer</span>
+            <span class="label">source</span>
             <span class="separator">::</span>
-            <span class="value">{APP_INFO.github}</span>
+            <a
+              href={APP_INFO.github}
+              class="value"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {APP_INFO.github}
+            </a>
           </div>
           <div class="detail-row">
             <span class="label">stack</span>

@@ -1,0 +1,98 @@
+name: MacOS (Intel/Apple Silicon) Nightly Build
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build MacOS Apps
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install Dependencies
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+          npm install
+          
+      - name: Set up keychain
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          echo "$MACOS_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
+          security import /tmp/certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          
+      - name: Build Frontend
+        run: npm run build
+        
+      - name: Build for Intel Mac
+        run: |
+          echo "Building for Intel Mac..."
+          npm run tauri build -- --target x86_64-apple-darwin --bundles dmg
+          # Rename the Intel build
+          cd src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/
+          for f in *.dmg; do mv "$f" "intel-$f"; done
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          
+      - name: Build for Apple Silicon
+        run: |
+          echo "Building for aarch64..."
+          npm run tauri build -- --target aarch64-apple-darwin --bundles dmg
+          # Rename the Apple Silicon build
+          cd src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/
+          for f in *.dmg; do mv "$f" "silicon-$f"; done
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          
+      - name: Upload Intel Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-intel-build
+          path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          
+      - name: Upload Apple Silicon Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-apple-silicon-build
+          path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          
+      - name: Create Release
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "MacOS Nightly Build v${{ steps.version.outputs.version }}"
+          tag_name: "macos-nightly-${{ steps.version.outputs.version }}"
+          files: |
+            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}

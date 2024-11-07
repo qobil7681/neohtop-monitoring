@@ -1,0 +1,64 @@
+name: Windows (x86_64) Nightly Build
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build Windows Executable
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install WebView2
+        run: |
+          $WebView2InstallPath = "$env:TEMP\MicrosoftEdgeWebview2Setup.exe"
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $WebView2InstallPath
+          Start-Process -FilePath $WebView2InstallPath -Args "/silent /install" -Wait
+          
+      - name: Install Dependencies
+        run: |
+          npm install
+          
+      - name: Build Frontend
+        run: npm run build
+        
+      - name: Build Windows Executable
+        run: |
+          echo "Building Windows executable..."
+          npm run tauri build
+          
+      - name: Upload Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: src-tauri/target/release/*.exe
+          
+      - name: Get version from package.json
+        id: version
+        shell: bash  # Force using bash shell
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          
+      - name: Create Release
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Windows Nightly Build v${{ steps.version.outputs.version }}"
+          tag_name: "windows-nightly-${{ steps.version.outputs.version }}"
+          files: src-tauri/target/release/*.exe
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}

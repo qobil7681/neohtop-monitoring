@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   import { onMount, onDestroy } from "svelte";
   import StatsBar from "$lib/components/StatsBar.svelte";
   import ToolBar from "$lib/components/ToolBar.svelte";
