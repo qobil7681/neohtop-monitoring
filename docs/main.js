@@ -12,7 +12,7 @@ function setTheme(isDark) {
 const savedTheme = localStorage.getItem('theme');
 if (savedTheme) {
   setTheme(savedTheme === 'dark');
-} else {
+} else {// This a feature
   setTheme(prefersDark.matches);
 }
 
