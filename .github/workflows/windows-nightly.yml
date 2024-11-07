@@ -1,0 +1,61 @@
+name: Windows Nightly Build
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+  workflow_dispatch:      # Allows manual triggering
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build Windows Executable
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install WebView2
+        run: |
+          $WebView2InstallPath = "$env:TEMP\MicrosoftEdgeWebview2Setup.exe"
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $WebView2InstallPath
+          Start-Process -FilePath $WebView2InstallPath -Args "/silent /install" -Wait
+          
+      - name: Install Dependencies
+        run: |
+          npm install
+          
+      - name: Build Frontend
+        run: npm run build
+        
+      - name: Build Windows Executable
+        run: |
+          echo "Building Windows executable..."
+          npm run tauri build -- --target x86_64-pc-windows-msvc
+          
+      - name: Upload Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: src-tauri/target/release/*.exe
+          
+      - name: Create Release
+        if: github.event_name == 'schedule'  # Only create release for scheduled builds
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Windows Nightly Build ${{ github.sha }}
+          tag_name: windows-nightly-${{ github.sha }}
+          files: src-tauri/target/release/*.exe
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

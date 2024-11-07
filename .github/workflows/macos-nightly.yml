@@ -1,0 +1,68 @@
+name: MacOS Nightly Build
+
+on:
+  workflow_dispatch:      # Allows manual triggering
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build MacOS Apps
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install Dependencies
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+          npm install
+          
+      - name: Build Frontend
+        run: npm run build
+        
+      - name: Build for Intel Mac
+        run: |
+          echo "Building for x86_64..."
+          npm run tauri build -- --target x86_64-apple-darwin --bundles dmg
+          
+      - name: Build for Apple Silicon
+        run: |
+          echo "Building for aarch64..."
+          npm run tauri build -- --target aarch64-apple-darwin --bundles dmg
+          
+      - name: Upload Intel Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-intel-build
+          path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          
+      - name: Upload Apple Silicon Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-apple-silicon-build
+          path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          
+      - name: Create Release
+        if: github.event_name == 'schedule'  # Only create release for scheduled builds
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Nightly Build ${{ github.sha }}
+          tag_name: nightly-${{ github.sha }}
+          files: |
+            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
