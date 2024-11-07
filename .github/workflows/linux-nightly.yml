@@ -60,13 +60,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-appimage
-          path: src-tauri/target/release/bundle/appimage/*.AppImage
+          path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
           
       - name: Upload Debian Package
         uses: actions/upload-artifact@v4
         with:
           name: linux-deb
-          path: src-tauri/target/release/bundle/deb/*.deb
+          path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
           
       - name: Create Release
         if: github.event_name == 'schedule'  # Only create release for scheduled builds
@@ -75,8 +75,8 @@ jobs:
           name: Linux Nightly Build ${{ github.sha }}
           tag_name: linux-nightly-${{ github.sha }}
           files: |
-            src-tauri/target/release/bundle/appimage/*.AppImage
-            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
