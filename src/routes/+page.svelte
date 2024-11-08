@@ -50,6 +50,18 @@
       visible: true,
       format: (v) => (v / (1024 * 1024)).toFixed(1) + " MB",
     },
+    {
+      id: "network_rx",
+      label: "Network RX",
+      visible: true,
+      format: (v) => (v / (1024 * 1024)).toFixed(1) + " MB",
+    },
+    {
+      id: "network_tx",
+      label: "Network TX",
+      visible: true,
+      format: (v) => (v / (1024 * 1024)).toFixed(1) + " MB",
+    },
     { id: "command", label: "Command", visible: false },
     { id: "ppid", label: "Parent PID", visible: false },
   ];

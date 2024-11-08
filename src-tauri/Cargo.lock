@@ -1610,6 +1610,7 @@ checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
 name = "macos-task-manager"
 version = "1.0.8"
 dependencies = [
+ "regex",
  "serde",
  "serde_json",
  "sysinfo",
