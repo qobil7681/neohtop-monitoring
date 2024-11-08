@@ -27,6 +27,19 @@ export const statusMap: Record<string, ProcessStatus> = {
   },
 };
 
+export function formatBytes(bytes: number): string {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex++;
+  }
+
+  return `${value.toFixed(2)} ${units[unitIndex]}`;
+}
+
 export function formatStatus(status: string): string {
   const processStatus = statusMap[status] || statusMap.Unknown;
   return `<span class="status-badge" style="--status-color: ${processStatus.color}">
@@ -37,19 +50,6 @@ export function formatStatus(status: string): string {
 export function formatMemorySize(bytes: number): string {
   const gb = bytes / (1024 * 1024 * 1024);
   return `${gb.toFixed(1)} GB`;
-}
-
-export function formatNetwork(bytes: number) {
-  // Convert bytes to either KB, MB, or GB
-  if (bytes === 0) {
-    return "0 B";
-  } else if (bytes < 1024) {
-    return (bytes / 1024).toFixed(2) + " KB";
-  } else if (bytes < 1024 * 1024 * 1024) {
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-  } else {
-    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
-  }
 }
 
 export function formatPercentage(value: number): string {

@@ -9,6 +9,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import type { SystemStats } from "$lib/types";
   import {
+    formatBytes,
     formatUptime,
     formatMemorySize,
     formatPercentage,
@@ -20,18 +21,6 @@
     ? (systemStats.memory_used / systemStats.memory_total) * 100
     : 0;
 
-  function formatBytes(bytes: number): string {
-    const units = ["B", "KB", "MB", "GB", "TB"];
-    let value = bytes;
-    let unitIndex = 0;
-
-    while (value >= 1024 && unitIndex < units.length - 1) {
-      value /= 1024;
-      unitIndex++;
-    }
-
-    return `${value.toFixed(1)} ${units[unitIndex]}`;
-  }
 
   $: diskUsagePercentage = systemStats
     ? (systemStats.disk_used_bytes / systemStats.disk_total_bytes) * 100
