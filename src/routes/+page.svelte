@@ -6,7 +6,7 @@
   import ProcessTable from "$lib/components/ProcessTable.svelte";
   import ProcessDetailsModal from "$lib/components/ProcessDetailsModal.svelte";
   import KillProcessModal from "$lib/components/KillProcessModal.svelte";
-  import { formatStatus } from "$lib/utils";
+  import { formatBytes, formatStatus } from "$lib/utils";
   import { themeStore } from "$lib/stores";
   import type { Process, SystemStats, Column } from "$lib/types";
 
@@ -49,6 +49,18 @@
       label: "Memory",
       visible: true,
       format: (v) => (v / (1024 * 1024)).toFixed(1) + " MB",
+    },
+    {
+      id: "network_rx",
+      label: "Network RX",
+      visible: true,
+      format: (v) => formatBytes(v),
+    },
+    {
+      id: "network_tx",
+      label: "Network TX",
+      visible: true,
+      format: (v) => formatBytes(v),
     },
     { id: "command", label: "Command", visible: false },
     { id: "ppid", label: "Parent PID", visible: false },

@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use regex::Regex;
+use std::process::Command;
 use sysinfo::{
     System,
     ProcessStatus,
@@ -53,6 +55,8 @@ struct ProcessInfo {
     name: String,
     cpu_usage: f32,
     memory_usage: u64,
+    network_rx: u64,
+    network_tx: u64,
     status: String,
     user: String,
     command: String,
@@ -75,11 +79,45 @@ pub struct SystemStats {
     pub disk_free_bytes: u64,
 }
 
+#[cfg(target_os = "macos")]
+fn get_network_usage_macos() -> HashMap<u32, (u64, u64)> {
+    // Use `nettop` command or network APIs available on macOS.
+    let output = Command::new("nettop")
+        .args(["-L", "1", "-P", "-J", "bytes_in,bytes_out"])
+        .output()
+        .expect("Failed to execute nettop");
+
+    let re = Regex::new(r"[^\s]+\.(\d+),(\d+),(\d+),").unwrap();
+
+    // parse output, mapping the lines to a map of pid to (rx, tx) bytes
+    let mut pid_map = HashMap::new();
+    for line in String::from_utf8_lossy(&output.stdout).lines() {
+        if let Some(caps) = re.captures(&line) {
+            let pid = caps.get(1).unwrap().as_str().parse::<u32>().unwrap();
+            let rx = caps.get(2).unwrap().as_str().parse::<u64>().unwrap();
+            let tx = caps.get(3).unwrap().as_str().parse::<u64>().unwrap();
+            pid_map.insert(pid, (rx, tx));
+        }
+    }
+
+    pid_map
+
+}
+
+fn get_network_usage() -> HashMap<u32, (u64, u64)> {
+    let process_network_usage = match cfg!(target_os = "macos") {
+        true => get_network_usage_macos(),
+        false => HashMap::new(),
+    };
+
+    process_network_usage
+}
+
 #[tauri::command]
 async fn get_processes(state: State<'_, AppState>) -> Result<(Vec<ProcessInfo>, SystemStats), String> {
     let processes_data;
     let system_stats;
-    
+
     // Scope for system lock
     {
         let mut sys = state.sys.lock().map_err(|_| "Failed to lock system state")?;
@@ -154,6 +192,8 @@ async fn get_processes(state: State<'_, AppState>) -> Result<(Vec<ProcessInfo>, 
     // Now lock the process cache
     let mut process_cache = state.process_cache.lock().map_err(|_| "Failed to lock process cache")?;
 
+    let network_data = get_network_usage();
+
     // Build the process info list
     let processes = processes_data
         .into_iter()
@@ -173,12 +213,17 @@ async fn get_processes(state: State<'_, AppState>) -> Result<(Vec<ProcessInfo>, 
                 _ => "Unknown"
             };
 
+            // Calculate network usage
+            let (network_rx, network_tx) = network_data.get(&pid).copied().unwrap_or((0, 0));
+
             ProcessInfo {
                 pid,
                 ppid: ppid.unwrap_or(0),
                 name: static_info.name.clone(),
                 cpu_usage,
                 memory_usage: memory,
+                network_rx,
+                network_tx,
                 status: status_str.to_string(),
                 user: static_info.user.clone(),
                 command: static_info.command.clone(),

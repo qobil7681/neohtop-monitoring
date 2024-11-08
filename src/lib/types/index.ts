@@ -5,6 +5,8 @@ export interface Process {
   name: string;
   cpu_usage: number;
   memory_usage: number;
+  network_rx: number;
+  network_tx: number;
   status: string;
   user: string;
   command: string;
