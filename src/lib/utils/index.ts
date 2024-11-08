@@ -39,6 +39,19 @@ export function formatMemorySize(bytes: number): string {
   return `${gb.toFixed(1)} GB`;
 }
 
+export function formatNetwork(bytes: number) {
+  // Convert bytes to either KB, MB, or GB
+  if (bytes === 0) {
+    return "0 B";
+  } else if (bytes < 1024) {
+    return (bytes / 1024).toFixed(2) + " KB";
+  } else if (bytes < 1024 * 1024 * 1024) {
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  } else {
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+  }
+}
+
 export function formatPercentage(value: number): string {
   return `${value.toFixed(1)}%`;
 }

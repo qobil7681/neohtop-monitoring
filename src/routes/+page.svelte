@@ -6,7 +6,7 @@
   import ProcessTable from "$lib/components/ProcessTable.svelte";
   import ProcessDetailsModal from "$lib/components/ProcessDetailsModal.svelte";
   import KillProcessModal from "$lib/components/KillProcessModal.svelte";
-  import { formatStatus } from "$lib/utils";
+  import { formatNetwork, formatStatus } from "$lib/utils";
   import { themeStore } from "$lib/stores";
   import type { Process, SystemStats, Column } from "$lib/types";
 
@@ -136,19 +136,6 @@
       intervalId = setInterval(() => {
         getProcesses();
       }, refreshRate);
-    }
-  }
-
-  function formatNetwork(bytes: number) {
-    // Convert bytes to either KB, MB, or GB
-    if (bytes === 0) {
-      return "0 B";
-    } else if (bytes < 1024) {
-      return (bytes / 1024).toFixed(2) + " KB";
-    } else if (bytes < 1024 * 1024 * 1024) {
-      return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-    } else {
-      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
     }
   }
 
