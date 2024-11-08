@@ -54,13 +54,13 @@
       id: "network_rx",
       label: "Network RX",
       visible: true,
-      format: (v) => (v / (1024 * 1024)).toFixed(1) + " MB",
+      format: (v) => formatNetwork(v),
     },
     {
       id: "network_tx",
       label: "Network TX",
       visible: true,
-      format: (v) => (v / (1024 * 1024)).toFixed(1) + " MB",
+      format: (v) => formatNetwork(v),
     },
     { id: "command", label: "Command", visible: false },
     { id: "ppid", label: "Parent PID", visible: false },
@@ -136,6 +136,17 @@
       intervalId = setInterval(() => {
         getProcesses();
       }, refreshRate);
+    }
+  }
+
+  function formatNetwork(bytes: number) {
+    // Convert bytes to either KB, MB, or GB
+    if (bytes < 1024) {
+      return (bytes / 1024).toFixed(2) + " KB";
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    } else {
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
     }
   }
 
