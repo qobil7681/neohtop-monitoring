@@ -24,6 +24,9 @@ export interface SystemStats {
   memory_used: number;
   memory_free: number;
   memory_cached: number;
+  swap_memory: number;
+  swap_used: number;
+  swap_free: number;
   uptime: number;
   load_avg: [number, number, number];
   network_rx_bytes: number;
