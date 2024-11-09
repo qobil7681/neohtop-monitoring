@@ -124,8 +124,16 @@ async fn get_processes(state: State<'_, AppState>) -> Result<(Vec<ProcessInfo>, 
         // Calculate total disk usage - only for physical disks
         let disk_stats = sys.disks().iter()
             .filter(|disk| {
-                // Filter for physical disks - typically those mounted at "/"
-                disk.mount_point() == std::path::Path::new("/")
+                // Filter for physical disks - typically those mounted at "/" on unix-systems
+                #[cfg(any(target_os = "linux", target_os = "macos"))]
+                {
+                    disk.mount_point() == std::path::Path::new("/")
+                }
+                // Filter for physical disks - typically those mounted at "C:\" on windows
+                #[cfg(target_os = "windows")]
+                {
+                    disk.mount_point() == std::path::Path::new("C:\\")
+                }
             })
             .fold((0, 0, 0), |acc, disk| {
                 (
