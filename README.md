@@ -3,6 +3,8 @@
   <h1>NeoHtop</h1>
   <p>A modern, cross-platform system monitor built on top of Svelte, Rust, and Tauri.</p>
 
+this is a note
+
   [![License](https://img.shields.io/github/license/Abdenasser/neohtop)](https://github.com/Abdenasser/neohtop/blob/main/LICENSE)
   [![GitHub stars](https://img.shields.io/github/stars/Abdenasser/neohtop)](https://github.com/Abdenasser/neohtop/stargazers)
   [![GitHub issues](https://img.shields.io/github/issues/Abdenasser/neohtop)](https://github.com/Abdenasser/neohtop/issues)
